@@ -2,18 +2,22 @@
   "name": "nimz-cli",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/logger.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@sindresorhus/safe-stringify": "^0.1.1",
     "ansi-diff": "^1.1.1",
     "cli-table3": "^0.6.3",
-    "nanoid": "^4.0.0"
+    "nanoid": "^4.0.0",
+    "strip-ansi": "^7.0.1"
   },
   "devDependencies": {
-    "delay": "^5.0.0"
+    "delay": "^5.0.0",
+    "random-words": "^1.2.0"
   }
 }
