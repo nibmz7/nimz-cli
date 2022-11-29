@@ -229,8 +229,7 @@ export async function withLogManager(
     saveToFile = false,
     fileOutputPath = path.join(process.cwd(), "logs.txt"),
     outputToConsole = true,
-    returnAsciiOutput = false,
-    returnTruncatedOutput = false,
+    truncateFileOutput = false,
     maxWidth = process.stdout.columns - 20,
   } = {}
 ) {
@@ -256,14 +255,14 @@ export async function withLogManager(
     }
     process.stdout.write(showCursor());
   }
-  const finalLogs = logManager.getLogs({
-    chars: returnAsciiOutput ? asciiChars : {},
-    truncateLogs: returnTruncatedOutput,
-  });
+
   if (saveToFile) {
+    const finalLogs = logManager.getLogs({
+      chars: asciiChars,
+      truncateLogs: truncateFileOutput,
+    });
     await fs.promises.writeFile(fileOutputPath, stripAnsi(finalLogs));
   }
-  return finalLogs;
 }
 
 export async function withGrouping() {
