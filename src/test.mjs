@@ -37,5 +37,25 @@ withLogManager(
       log("doSomething-1-a end");
     });
   },
-  { saveToFile: true, maxWidth: 100 }
+  { maxWidth: 100, saveToFile: true }
+  // { saveToFile: true, maxWidth: 100 }
+  // { isCI: true, maxWidth: 100 }
 );
+
+// withLogManager(
+//   async () => {
+//     await withGrouping("a", async () => {
+//       log("doSomething-1-a start");
+//       await delay(randomMs());
+//       await Promise.all([
+//         withGrouping("b", doSomething2),
+//         withGrouping("c", doSomething2),
+//       ]);
+//       await delay(randomMs());
+//       log("doSomething-1-a end");
+//     });
+//   },
+//   { maxWidth: 100, printFinalOutputOnly: true }
+//   // { saveToFile: true, maxWidth: 100 }
+//   // { isCI: true, maxWidth: 100 }
+// );

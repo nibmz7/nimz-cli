@@ -6,9 +6,15 @@ Group logs according to their asynchronous context and display nicely in a table
 
 ## Install
 
-```sh
+**Warning:** This package is ESM only. Please refer to [this guide](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c) to migrate your project to ESM or to use this package with CommonJS.
+
+```bash
 npm install nimz-cli
 ```
+
+## Blog post
+
+- [Grouping logs with async local storage](https://nimz.dev/posts/grouping-logs-with-async-local-storage)
 
 ## Example
 
@@ -77,7 +83,7 @@ Type: `object`
 ##### maxLines
 
 Type: `number`\
-Default: `5`\
+Default: `5`
 
 Limit the number of lines to display per log group in the table.
 
@@ -88,12 +94,12 @@ Default: `process.stdout.columns - 20`
 
 Limit the number of characters to display per line in the table. This does not stop nested tables from overflowing.
 
-##### outputToConsole
+##### disableTerminalOutput
 
 Type: `boolean`\
-Default: `true`
+Default: `false`
 
-Should print output to console.
+Disable terminal output. Useful for saving logs to a file only.
 
 #### saveToFile
 
@@ -114,8 +120,18 @@ Specify the path to save the log file.
 Type: `boolean`\
 Default: `false`
 
-Save the log file in truncate mode.
+Save the log file in truncate mode (e.g. 16 lines truncated...).
 
-## Related
+#### printAsciiTable
 
-- [Grouping logs with async local storage](https://nimz.dev/posts/grouping-logs-with-async-local-storage)
+Type: `boolean`\
+Default: `false`
+
+Use ascii characters to print table. Useful if running in a terminal that does not support unicode characters.
+
+#### printFinalOutputOnly
+
+Type: `boolean`\
+Default: `false`
+
+Print the final output only. Useful if running in CI or using multiple log managers in the same program which would write over each other.

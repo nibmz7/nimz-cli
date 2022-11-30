@@ -108,7 +108,7 @@ function truncateText(t, maxWidth) {
 }
 
 class LogManager {
-  constructor({ maxLines, maxWidth, outputToConsole }) {
+  constructor({ maxLines, maxWidth, disableTerminalOutput }) {
     this.roots = [];
     this.groups = {};
     this.storage = new AsyncLocalStorage();
@@ -116,7 +116,7 @@ class LogManager {
     this.loadingIndex = 0;
     this.differ = ansiDiff();
     this.maxLines = maxLines;
-    this.outputToConsole = outputToConsole;
+    this.disableTerminalOutput = disableTerminalOutput;
     this.maxWidth = maxWidth;
   }
 
@@ -209,7 +209,7 @@ class LogManager {
   }
 
   printLogs() {
-    if (!this.readyToRender || !this.outputToConsole) return;
+    if (!this.readyToRender || this.disableTerminalOutput) return;
     this.readyToRender = false;
     const text = this.differ.update(this.getLogs());
     process.stdout.write(text, () => {
@@ -225,38 +225,51 @@ const logManagerLocalStorage = new AsyncLocalStorage();
 export async function withLogManager(
   fn,
   {
+    printAsciiTable = false,
+    printFinalOutputOnly = false,
     maxLines = 5,
     saveToFile = false,
     fileOutputPath = path.join(process.cwd(), "logs.txt"),
-    outputToConsole = true,
+    disableTerminalOutput = false,
     truncateFileOutput = false,
     maxWidth = process.stdout.columns - 20,
   } = {}
 ) {
-  const logManager = new LogManager({ maxLines, maxWidth, outputToConsole });
   let intervalId;
-  if (outputToConsole) {
+  const logManager = new LogManager({
+    maxLines,
+    maxWidth,
+    disableTerminalOutput: disableTerminalOutput || printFinalOutputOnly,
+  });
+
+  if (!disableTerminalOutput && !printFinalOutputOnly) {
     process.stdout.write(hideCursor() + clearScreen() + "\n");
     intervalId = setInterval(() => {
       logManager.printLogs();
     }, RENDER_INTERVAL);
   }
+
   await logManagerLocalStorage.run(logManager, () => {
     return fn();
   });
+
   if (intervalId) clearInterval(intervalId);
-  if (outputToConsole) {
-    const logs = logManager.getLogs();
-    process.stdout.write(clearScreen() + "\n" + logs);
-    if (saveToFile) {
-      process.stdout.write(
-        "\n\nLogs will be saved to " + fileOutputPath + "\n"
-      );
-    }
-    process.stdout.write(showCursor());
+
+  if (!disableTerminalOutput) {
+    const logs = logManager.getLogs({
+      chars: printAsciiTable ? asciiChars : {},
+    });
+    process.stdout.write(
+      (printFinalOutputOnly ? "" : clearScreen()) +
+        "\n" +
+        logs +
+        "\n" +
+        showCursor()
+    );
   }
 
   if (saveToFile) {
+    process.stdout.write("\n\nLogs will be saved to " + fileOutputPath + "\n");
     const finalLogs = logManager.getLogs({
       chars: asciiChars,
       truncateLogs: truncateFileOutput,

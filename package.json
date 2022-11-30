@@ -1,14 +1,21 @@
 {
   "name": "nimz-cli",
-  "version": "1.0.0",
-  "description": "",
-  "main": "src/logger.js",
+  "version": "1.0.1",
+  "description": "Group logs according to their asynchronous context and display nicely in a table format.",
+  "exports": "./src/logger.js",
   "type": "module",
+  "repository": "https://github.com/nibmz7/nimz-cli",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Nur Ilyas",
   "license": "ISC",
+  "engines": {
+    "node": ">=14.16"
+  },
+  "files": [
+    "src"
+  ],
   "dependencies": {
     "@sindresorhus/safe-stringify": "^0.1.1",
     "ansi-diff": "^1.1.1",
@@ -19,5 +26,11 @@
   "devDependencies": {
     "delay": "^5.0.0",
     "random-words": "^1.2.0"
-  }
+  },
+  "keywords": [
+    "log",
+    "cli",
+    "terminal",
+    "table"
+  ]
 }
