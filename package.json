@@ -1,6 +1,6 @@
 {
   "name": "nimz-cli",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Group logs according to their asynchronous context and display nicely in a table format.",
   "exports": "./src/logger.js",
   "type": "module",

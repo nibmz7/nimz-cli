@@ -12,6 +12,9 @@ async function doSomething3() {
     log("doSomething-33 " + randomWords(5));
     await delay(randomMs());
     log("doSomething-333 " + randomWords(20));
+    if (Math.random() > 0.5) {
+      throw new Error("Something went wrong");
+    }
   }
 }
 

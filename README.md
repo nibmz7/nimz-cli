@@ -66,7 +66,7 @@ withLogManager(
 
 ## API
 
-### withLogManager(fn, options?)
+### withLogManager(fn, options?) => Promise
 
 Wrap your code in a `withLogManager` block to enable context logging. This should be the start of your program or code execution path.
 
@@ -135,3 +135,16 @@ Type: `boolean`\
 Default: `false`
 
 Print the final output only. Useful if running in CI or using multiple log managers in the same program which would write over each other.
+
+### withGrouping(title, fn) => Promise
+
+Wrap your code in a `withGrouping` block to create a new log group.
+
+### log(...messages)
+
+Log a message to the current log group.
+
+### logFinished(...messages)
+
+Clear and log a message to the current log group. Useful for logging only the final message of a log group.
+

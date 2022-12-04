@@ -107,6 +107,13 @@ function truncateText(t, maxWidth) {
   return t.length > maxWidth ? t.slice(0, 80) + "..." : t;
 }
 
+class GroupError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "Group error";
+  }
+}
+
 class LogManager {
   constructor({ maxLines, maxWidth, disableTerminalOutput }) {
     this.roots = [];
@@ -141,11 +148,22 @@ class LogManager {
       this.roots.push(id);
     }
     this.groups[id] = group;
-    await this.storage.run(id, () => {
-      return fn();
-    });
-    group.done = true;
-    this.printLogs();
+    try {
+      const result = await this.storage.run(id, () => {
+        return fn();
+      });
+      group.done = true;
+      return result;
+    } catch (error) {
+      if (error instanceof GroupError) {
+        group.childError = true;
+        throw error;
+      }
+      group.error = error.stack;
+      throw new GroupError(error.message);
+    } finally {
+      this.printLogs();
+    }
   }
 
   log(...messages) {
@@ -174,26 +192,34 @@ class LogManager {
       const groupId = ids.shift();
       if (groupId) {
         const group = this.groups[groupId];
-        const groupTitle = group.name + " " + (group.done ? "✔" : loading);
-        const table = new Table({ head: [groupTitle], chars });
-        const lines =
-          truncateLogs && group.done && group.finishedLines.length > 0
-            ? group.finishedLines
-            : group.lines;
-        const truncateLineText =
-          lines.length > this.maxLines && truncateLogs
-            ? yellow(`${lines.length - this.maxLines} lines truncated...\n`)
-            : "";
-        const logs = truncateLogs ? lines.slice(-this.maxLines) : lines;
-        table.push([
-          truncateLineText +
-            logs
-              .map((x) => {
-                return truncateLogs ? truncateText(x, this.maxWidth) : x;
-              })
-              .join("\n"),
-        ]);
-        tableStack.push(table);
+        if (group.error) {
+          const groupTitle = group.name + " " + "✖";
+          const table = new Table({ head: [groupTitle], chars });
+          table.push([yellow(group.error)]);
+          tableStack.push(table);
+        } else {
+          const status = group.childError ? "✖" : group.done ? "✔" : loading;
+          const groupTitle = group.name + " " + status;
+          const table = new Table({ head: [groupTitle], chars });
+          const lines =
+            truncateLogs && group.done && group.finishedLines.length > 0
+              ? group.finishedLines
+              : group.lines;
+          const truncateLineText =
+            lines.length > this.maxLines && truncateLogs
+              ? yellow(`${lines.length - this.maxLines} lines truncated...\n`)
+              : "";
+          const logs = truncateLogs ? lines.slice(-this.maxLines) : lines;
+          table.push([
+            truncateLineText +
+              logs
+                .map((x) => {
+                  return truncateLogs ? truncateText(x, this.maxWidth) : x;
+                })
+                .join("\n"),
+          ]);
+          tableStack.push(table);
+        }
         idsStack.push(group.children.slice());
       } else {
         idsStack.pop();
@@ -249,9 +275,18 @@ export async function withLogManager(
     }, RENDER_INTERVAL);
   }
 
-  await logManagerLocalStorage.run(logManager, () => {
-    return fn();
-  });
+  let result;
+  let error;
+
+  try {
+    result = await logManagerLocalStorage.run(logManager, () => {
+      return fn();
+    });
+  } catch (e) {
+    error = e;
+  }
+
+  logManager.disableTerminalOutput = true;
 
   if (intervalId) clearInterval(intervalId);
 
@@ -276,6 +311,13 @@ export async function withLogManager(
     });
     await fs.promises.writeFile(fileOutputPath, stripAnsi(finalLogs));
   }
+
+  if (error) {
+    process.stdout.write("\n\n");
+    throw error;
+  }
+
+  return result;
 }
 
 export async function withGrouping() {
